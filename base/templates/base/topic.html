@@ -1,0 +1,42 @@
+{% load static %}
+<div class="topics">
+  <div class="topics__header">
+    <h2>Telusuri Bacaan</h2>
+  </div>
+  <ul class="topics__list">
+    <li>
+      <a href="{% url 'home' %}" class="active">Semua <span>22</span></a>
+    </li>
+    <li>
+      <a href="{% url 'home' %}?q=b"><img src="{% static 'images/b/b.png' %}" alt="" style="width:160px; height: 35px;"> <span>1</span></a>
+    </li>
+    <li>
+      <a href="{% url 'home' %}?q=t"><img src="{% static 'images/t/t.png' %}" alt="" style="width:160px; height: 35px;"> <span>1</span></a>
+    </li>
+    <li>
+      <a href="{% url 'home' %}?q=1"><img src="{% static 'images/1/1.png' %}" alt="" style="width: 45px; height: 35px;"> <span>6</span></a>
+    </li>
+    <li>
+      <a href="{% url 'home' %}?q=2"><img src="{% static 'images/2/1.png' %}" alt="" style="width: 45px; height: 35px;"> <span>2</span></a>
+    </li>
+    <li>
+      <a href="{% url 'home' %}?q=3"><img src="{% static 'images/3/1.png' %}" alt="" style="width: 45px; height: 35px;"> <span>3</span></a>
+    </li>
+    <li>
+      <a href="{% url 'home' %}?q=4"><img src="{% static 'images/4/1.png' %}" alt="" style="width: 45px; height: 35px;"> <span>3</span></a>
+    </li>
+    <li>
+      <a href="{% url 'home' %}?q=5"><img src="{% static 'images/5/1.png' %}" alt="" style="width: 45px; height: 35px;"> <span>3</span></a>
+    </li>
+    <li>
+      <a href="{% url 'home' %}?q=6"><img src="{% static 'images/6/1.png' %}" alt="" style="width: 45px; height: 35px;"> <span>3</span></a>
+    </li>
+  </ul>
+  <!-- <a class="btn btn--link" href="topics.html"> -->
+    <!-- More -->
+    <!-- <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"> -->
+      <!-- <title>chevron-down</title> -->
+      <!-- <path d="M16 21l-13-13h-3l16 16 16-16h-3l-13 13z"></path> -->
+    <!-- </svg> -->
+  <!-- </a> -->
+</div>
