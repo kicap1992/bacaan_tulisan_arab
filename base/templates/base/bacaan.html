@@ -2,11 +2,15 @@
 {% block content %}
 {% load static %}
     <main class="update-account layout">
+      {% csrf_token %}
       <div class="container">
         <div class="layout__box">
           <div class="layout__boxHeader">
             <div class="layout__boxTitle">
-              <a href="profile.html" style="text-align: left;">
+              <audio id="myAudio_{{bacaan.judul_bacaan}}">
+                <source src="{% static 'audio/' %}{{bacaan.audio_url}}" type="audio/wav">
+              </audio>
+              <a href="{% url 'home' %}" style="text-align: left;">
                   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
                       viewBox="0 0 32 32">
                       <title>arrow-left</title>
@@ -22,7 +26,7 @@
             
             <center><img src="{% static 'images/' %}{{bacaan.image_url}}" style="{{style}}"  alt=""></center>
 
-            <center><p class="btn btn--main">Dengar <i id="i_{{bacaan.judul_bacaan}}" class="fa fa-play-circle"></i></p></center>
+            <center><p class="btn btn--main" onclick="playAudio()">Dengar <i id="i_{{bacaan.judul_bacaan}}" class="fa fa-play-circle"></i></p></center> 
             <br>
             <center><button class="btn" id="recordButton" style="background-color: green;">Rekam <i id="i_{{bacaan.judul_bacaan}}" class="fa fa-play-circle"></i></button> &nbsp <button id="pauseButton" style="cursor: not-allowed; background-color: grey;" class="btn btn--default" disabled>Pause <i id="i_{{bacaan.judul_bacaan}}" class="fa fa-pause-circle"></i></button> &nbsp <button id="stopButton" style="cursor: not-allowed; background-color: grey;" class="btn btn--default" disabled>Stop <i id="i_{{bacaan.judul_bacaan}}" class="fa fa-stop-circle"></i></button></center>
             <!-- <br> -->
@@ -30,13 +34,52 @@
             <br>
             <div id="formats" style="display: none;">Format: start recording to see sample rate</div>
             <center><div id="recordingsList"></div></center>
+            <center><p id="penilaian"></p></center>
+            <div id="image_sound" style="display: none;">
+              <h5>Bacaan Ustazah</h5>
+              <img id="img_bacaan_ustazah" >
+              <br><br>
+              <h5>Bacaan Anda</h5>
+              <img id="img_bacaan_anda">
+            </div>
+            <div id="error_teks" style="display: none;"><h2>Tidak Dapat Menilai Bacaan Anda. Sila Coba Refresh Halaman</h2></div>
             <!-- <div id="disini"></div> -->
           </div>
         </div>
       </div>
     </main>
     <script src="{% static 'js/recorder.js' %}"></script>
+    <script src="{% static 'js/block/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'js/block/jquery.blockUI.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
     <script>
+      function playAudio() {
+          let audio = document.getElementById("myAudio_{{bacaan.judul_bacaan}}");
+          document.getElementById("i_{{bacaan.judul_bacaan}}").setAttribute("class", "fa fa-pause-circle");
+          audio.play();
+          
+
+        //sleep 3 second
+         setTimeout(function(){
+          document.getElementById("i_{{bacaan.judul_bacaan}}").setAttribute("class", "fa fa-play-circle");
+         }, 5000);
+        // if audio is playing in other audio tag, stop it else play it
+        
+
+        
+
+        
+
+      }
+    </script>
+    <script>
+      let get_url = window.location.host
+      let get_http = window.location.protocol
+      // console.log(get_http)
+      // console.log(get_url)
+
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      console.log(csrftoken);
       URL = window.URL || window.webkitURL;
 
       var gumStream; 						//stream from getUserMedia()
@@ -148,7 +191,18 @@
       function stopRecording() {
         console.log("stopButton clicked");
         
-      
+        setAttributes(recordButton, {
+          "style": "background-color: green; cursor: pointer;",
+          
+        });
+
+        setAttributes(stopButton, {
+          "style": "background-color: grey;cursor: not-allowed;",         
+        });
+
+        setAttributes(pauseButton, {
+          "style": "background-color: grey;cursor: not-allowed;",         
+        });
         //disable the stop button, enable the record too allow for new recordings
         stopButton.disabled = true;
         recordButton.disabled = false;
@@ -167,7 +221,7 @@
         rec.exportWAV(createDownloadLink);
       }
       
-      function createDownloadLink(blob) {
+      async function createDownloadLink(blob) {
         
         var url = URL.createObjectURL(blob);
         var au = document.createElement('audio');
@@ -185,12 +239,75 @@
         /* let disini = document.getElementById('disini')
         disini.append(au) */
 
-      
+        
         //save to disk link
         link.href = url;
         link.download = filename+".wav"; //download forces the browser to donwload the file using the  filename
         link.innerHTML = "Save to disk";
-      
+
+
+        sedang_proses()
+        try{
+          let data = new FormData()
+          data.append('sound', blob, filename+".wav")
+          data.append('url_bacaan', "{{bacaan.audio_url}}")
+          //create fetch with headers
+          let response = await fetch('/api/', {
+            method: 'POST',
+            body: data,
+            headers: {
+              'X-CSRFToken': csrftoken,
+            }
+          })
+          let json = await response.json()
+          console.log(json)
+          // if response code is 200, then the request is successful
+          if(response.status == 200){
+
+            
+            // div id="image_sound" remove attr style
+            let image_sound = document.getElementById('image_sound')
+            image_sound.removeAttribute('style')
+            // img id="img_bacaan_ustazah" src= json.path +'spec1'+json.hour_min_sec+'.png'
+            let img_bacaan_ustazah = document.getElementById('img_bacaan_ustazah')
+            img_bacaan_ustazah.src = get_http+"//"+get_url+"/"+ json.path +'spec1'+json.hour_min_sec+'.png'
+            // img id="img_bacaan_anda" src= json.path +'spec'+json.hour_min_sec+'.png'
+            let img_bacaan_anda = document.getElementById('img_bacaan_anda')
+            img_bacaan_anda.src = get_http+"//"+get_url+"/"+ json.path +'spec'+json.hour_min_sec+'.png'
+            // div id="error_teks" attr style="display: none;"
+            let error_teks = document.getElementById('error_teks')
+            error_teks.setAttribute('style', 'display: none;')
+            // nilainya = json.cosine_similarity to %
+            let nilainya = json.cosine_similaritynya * 100
+            // only 2 decimal places from nilainya
+            nilainya = nilainya.toFixed(2)
+            // p id="penilaian" innerHTML= Penilaian Kesamaan Bacaan Anda Dengan Ustazah adalah sebanyak '+nilainya+'%'
+            let penilaian = document.getElementById('penilaian')
+            penilaian.innerHTML = 'Penilaian Kesamaan Bacaan Anda Dengan Ustazah adalah sebanyak '+nilainya+'%'
+          }else{
+            // div id="image_sound" attr style="display: none;"
+            let image_sound = document.getElementById('image_sound')
+            image_sound.setAttribute('style', 'display: none;')
+            // div id="error_teks" remove attr style
+            let error_teks = document.getElementById('error_teks')
+            let penilaian = document.getElementById('penilaian')
+            penilaian.innerHTML = null
+          }
+          $.unblockUI();
+          // console.log(json)
+        }catch(err){
+          // div id="image_sound" attr style="display: none;"
+          let image_sound = document.getElementById('image_sound')
+          image_sound.setAttribute('style', 'display: none;')
+          // div id="error_teks" remove attr style
+          let error_teks = document.getElementById('error_teks')
+          let penilaian = document.getElementById('penilaian')
+          penilaian.innerHTML = null
+          console.log(err)
+          $.unblockUI();
+        }
+
+        // console.log(link.href)
         //add the new audio element to li
         // li.appendChild(au);
         
